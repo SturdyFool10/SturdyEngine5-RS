@@ -1,0 +1,19 @@
+/target
+*.log
+
+# Runtime shader-compiler cache: the engine writes this to `./Shaders/.cache` (relative to cwd)
+# the first time a `sturdy`-based binary compiles a shader at runtime — pure build output, not
+# source (the engine's own `.slang` shaders ship embedded in the compiled binary via CMake; see
+# `Core::Slang::find_embedded_shader` in the vendored engine).
+/Shaders/
+
+# The SturdyEngine5 C++ engine source is owned by the engine's own repository, not this one. It is
+# expected at `sturdy-sys/vendor/sturdyengine5` (copy, symlink, or submodule) — see README.md
+# "Building". `build.rs` fails with instructions if it is missing.
+/sturdy-sys/vendor/sturdyengine5/
+
+# Editor / OS noise
+.DS_Store
+*.swp
+.idea/
+.vscode/

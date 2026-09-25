@@ -1,0 +1,18 @@
+[package]
+name = "hello"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[dependencies]
+sturdy = { path = "../../sturdy" }
+# For `#[derive(bytemuck::Pod, bytemuck::Zeroable)]` on the demo ECS components below; sturdy
+# re-exports the crate too (`sturdy::bytemuck`), but a direct dependency keeps the derive macro's
+# own crate-detection simple.
+bytemuck = { version = "1", features = ["derive"] }
+# For the `glam::` types used directly in the demo (`sturdy` re-exports the crate too as
+# `sturdy::glam`, but a direct dependency keeps this consistent with `bytemuck` above, and lets
+# `use glam::...` work without the `sturdy::` prefix). Must match `sturdy`'s own `glam` version and
+# `scalar-math` feature choice (see `sturdy/Cargo.toml`) — a mismatched version would be a
+# different, layout-incompatible set of types even with the same name.
+glam = { version = "0.33", features = ["bytemuck", "scalar-math"] }

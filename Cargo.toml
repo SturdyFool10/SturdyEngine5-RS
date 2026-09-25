@@ -1,0 +1,26 @@
+[workspace]
+resolver = "3"
+members = ["sturdy-sys", "sturdy", "sturdy-macros", "examples/hello"]
+
+[workspace.package]
+# Tracks the vendored engine's own `project(SturdyEngine5 VERSION ...)` in
+# `sturdy-sys/vendor/sturdyengine5/CMakeLists.txt` — bump alongside it, not independently, so a
+# `sturdy` version number always identifies the exact engine build it wraps.
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["SturdyFool10"]
+repository = "https://github.com/SturdyFool10/SturdyEngine5-RS"
+homepage = "https://github.com/SturdyFool10/SturdyEngine5-RS"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+# Deliberately NOT `panic = "abort"`: every closure that crosses into C++ (game-logic callbacks,
+# the UI draw hook, the log sink, scheduler tasks) is individually wrapped in `catch_unwind` +
+# explicit `std::process::abort()` at its own boundary (see each bridge module's local `guard()`),
+# so a panic there aborts regardless of this setting. Setting it here too would be redundant for
+# those *and* would silently break `sturdy::task::spawn`'s `JoinError` panic-capture everywhere
+# else, since `panic = "abort"` disables unwinding — and therefore `catch_unwind` — process-wide,
+# not just at the FFI boundary.
+strip = "symbols"

@@ -1,0 +1,40 @@
+[package]
+name = "sturdy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Ergonomic Rust API for SturdyEngine 5, statically bundled"
+keywords = ["gamedev", "engine", "vulkan", "rhi"]
+categories = ["game-engines", "api-bindings", "rendering::engine"]
+
+[dependencies]
+sturdy-sys = { path = "../sturdy-sys" }
+# Backs `#[derive(sturdy::Bundle)]` / `#[derive(Bundle)]` (via the prelude); see src/ecs.rs's
+# `Bundle` trait for what it generates.
+sturdy-macros = { path = "../sturdy-macros" }
+# Needed to name `cxx::UniquePtr<...>` in the RHI command-encoder RAII wrappers (sturdy-sys already
+# depends on this same version; see src/rhi.rs).
+cxx = "1"
+# Backs the typed `Component` trait in src/ecs.rs: `Pod` gives a checked, zero-copy byte view of a
+# caller's `#[repr(C)]` struct instead of hand-written `unsafe` transmutes.
+bytemuck = { version = "1", features = ["derive"] }
+# Vector/quaternion/matrix types for positions, rotations, scales, directions, colors, etc. —
+# GLSL-shaped math (operator overloading, swizzling) instead of raw `[f32; N]` arrays. `bytemuck`
+# gets glam's types a `Pod`/`Zeroable` impl so they drop straight into `#[derive(Component)]`
+# structs. `scalar-math` turns off glam's default SIMD-backed layout (which over-aligns `Vec4`/
+# `Quat`/`Mat4` to 16 bytes) so every type's alignment matches its plain `[f32; N]` equivalent —
+# required for byte-exact parity with the engine's tightly-packed (non-GLM-aligned) C++ structs;
+# see `scene.rs`'s module doc comment for why that parity matters.
+glam = { version = "0.33", features = ["bytemuck", "scalar-math"] }
+
+# Passthrough: an application picks its engine build configuration here instead of ever touching
+# sturdy-sys or CMake directly. See sturdy-sys/Cargo.toml for what each one maps to.
+[features]
+webgpu = ["sturdy-sys/webgpu"]
+glfw = ["sturdy-sys/glfw"]
+tracy = ["sturdy-sys/tracy"]
+debug-sections = ["sturdy-sys/debug-sections"]
+native-cpu = ["sturdy-sys/native-cpu"]

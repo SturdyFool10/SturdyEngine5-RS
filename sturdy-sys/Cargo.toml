@@ -1,0 +1,48 @@
+[package]
+name = "sturdy-sys"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Statically bundled SturdyEngine 5 C++ engine plus cxx bindings"
+keywords = ["gamedev", "engine", "vulkan", "ffi"]
+categories = ["external-ffi-bindings", "game-engines", "rendering::engine"]
+links = "sturdy"
+build = "build.rs"
+# NOTE: not yet crates.io-publishable as-is. `vendor/sturdyengine5` is ~40MB (`Fonts/` alone is
+# ~24MB of it), likely past crates.io's default package-size limit, and it's not yet audited which
+# of that `build.rs` genuinely needs at compile time vs. only ships for runtime asset loading (in
+# which case it could ship as a separate data crate/archive instead of inline source). Needs its
+# own pass before a `cargo publish` is attempted.
+
+[dependencies]
+cxx = "1"
+
+[build-dependencies]
+cxx-gen = "0.7"
+proc-macro2 = "1"
+
+# Each feature is a passthrough to one of the engine's own `STURDY_*` CMake options (see
+# sturdy-sys/build.rs's `feature_cmake_args`) — cargo feature flags are how a downstream Rust
+# application reaches the engine's build-time configuration, since it never invokes CMake itself.
+[features]
+default = []
+## Builds the WebGPU (Dawn) RHI backend alongside Vulkan (STURDY_ENABLE_WEBGPU). Roughly doubles
+## engine build time (Dawn vendors Abseil/SPIRV-Tools/Tint).
+webgpu = []
+## Builds the optional GLFW desktop window provider alongside the default SDL3 one
+## (STURDY_BUILD_GLFW_WINDOW_PROVIDER).
+glfw = []
+## Compiles Tracy 0.13.1 profiler instrumentation into every engine target (STURDY_ENABLE_TRACY).
+## Connect with Tracy Profiler 0.13.1 at runtime; adds overhead, so leave off for shipping builds.
+tracy = []
+## Keeps debug-friendly sections instead of the engine's default dead-strippable ones
+## (STURDY_ENABLE_STATIC_DEAD_STRIPPING=OFF). Larger binary, easier to debug with a native debugger.
+debug-sections = []
+## Compiles the C++ side with `-march=native` instead of the portable `x86-64-v2`/`armv8-a`
+## baseline. Faster, but the resulting binary can `SIGILL` on a different CPU — only for binaries
+## you know will run on the machine that built them. See `STURDY_RS_TARGET_CPU` to pick a specific
+## target instead.
+native-cpu = []

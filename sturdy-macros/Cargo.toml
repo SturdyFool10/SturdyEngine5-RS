@@ -1,0 +1,19 @@
+[package]
+name = "sturdy-macros"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Derive macros for sturdy (SturdyEngine 5 Rust bindings)"
+keywords = ["gamedev", "engine", "derive", "macros"]
+categories = ["game-engines", "development-tools::procedural-macro-helpers"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["full"] }
+quote = "1"
+proc-macro2 = "1"

@@ -101,12 +101,12 @@ handle).
 
 ## Building
 
-**The engine source is not in this repository.** Place a SturdyEngine5 checkout at
-`sturdy-sys/vendor/sturdyengine5` (copy or symlink one; a submodule works too
-with `git submodule add -f https://github.com/sturdyfool10/sturdyengine5 sturdy-sys/vendor/sturdyengine5`) before building; it is gitignored so it can be a submodule or
-symlink without being committed here.
+**The engine source is not in this repository, but you don't need to fetch it.** On first build,
+`sturdy-sys/build.rs` shallow-fetches the pinned engine revision (`ENGINE_REV` in `build.rs`) from
+GitHub into `sturdy-sys/vendor/sturdyengine5` (gitignored). To develop against your own engine
+checkout instead, copy or symlink it to that path first; an existing checkout is used as-is.
 
-Needs `cmake` (>= 3.28), `ninja`, `clang`/`clang++` (C++26), a libstdc++ with `libstdc++.a`, and
+Needs `git`, `cmake` (>= 3.28), `ninja`, `clang`/`clang++` (C++26), a libstdc++ with `libstdc++.a`, and
 network access on the first build (the engine fetches its third-party sources; they are cached in
 Cargo's `OUT_DIR`). The first build compiles ~2300 C++ files; later builds are incremental.
 

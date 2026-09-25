@@ -63,6 +63,33 @@ const ALLOWED_SYSTEM_LIBS: &[&str] = &["wayland-client"];
 /// Linked by the engine's CMake but unnecessary: loaded at runtime through volk instead.
 const DROPPED_SYSTEM_LIBS: &[&str] = &["vulkan"];
 
+/// The engine commit these bindings are written against. Bump together with the shim/bridges.
+const ENGINE_REPO: &str = "https://github.com/sturdyfool10/sturdyengine5";
+const ENGINE_REV: &str = "36f2df0b15482c5a990a89405fc3da0e71c6819f";
+
+/// A raw clone of this repo has no engine source (it is gitignored and owned by the engine's own
+/// repo), so fetch the pinned revision on first build. An existing checkout/symlink/copy at the
+/// path is used as-is, so local engine development is unaffected.
+fn ensure_engine_source(engine_src: &Path) {
+    if engine_src.join("CMakeLists.txt").exists() {
+        return;
+    }
+    fs::create_dir_all(engine_src).unwrap();
+    let git = |args: &[&str]| {
+        let mut cmd = Command::new("git");
+        cmd.arg("-C").arg(engine_src).args(args);
+        run(&mut cmd);
+    };
+    git(&["init", "-q"]);
+    git(&["fetch", "-q", "--depth=1", ENGINE_REPO, ENGINE_REV]);
+    git(&["checkout", "-q", "FETCH_HEAD"]);
+    assert!(
+        engine_src.join("CMakeLists.txt").exists(),
+        "fetched SturdyEngine5 {ENGINE_REV} from {ENGINE_REPO} but {} has no CMakeLists.txt",
+        engine_src.display()
+    );
+}
+
 fn main() {
     let manifest = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
     let out = PathBuf::from(env::var_os("OUT_DIR").unwrap());
@@ -81,12 +108,7 @@ fn main() {
         println!("cargo:rerun-if-env-changed={var}");
     }
 
-    assert!(
-        engine_src.join("CMakeLists.txt").exists(),
-        "SturdyEngine5 source missing at {}. It is not part of this repository: copy, symlink, or \
-         submodule a checkout of the engine there (it must contain CMakeLists.txt at that path).",
-        engine_src.display()
-    );
+    ensure_engine_source(&engine_src);
 
     let bridge_cc = generate_bridges(&manifest, &out);
     let build_dir = out.join("engine-build");

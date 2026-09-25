@@ -389,3 +389,24 @@ re-verification against the actual code, not just trusted and propagated.
 - [x] Re-run the reference-API diff (done; remaining name-misses are the renamed/consolidated clusters listed above, plus `ecs_component_info`/`_name`/`add_tag`/`register_tag_component`, `async_is_worker_thread`, `native_*_queue`, `render_create_shape_model` (covered by `Shape`), `window_take_completions`, and the `reflection_find_field`/`find_method`/`get_field`/`set_field`/`invoke_static_method` handle-style accessors — small, unbound convenience gaps rather than missing subsystems) (`FFI/src/FFI/*.cpp` exported function names vs. `sturdy-sys`/
       `sturdy`) after implementing any item above, and update this file's "Verified NOT a gap"
       section if the false-positive clusters change shape.
+
+## Gap audit vs. engine public headers (2026-09-25)
+
+Found by checking every `Engine/`, `Runtime/`, `WindowManager/` public header's symbols for any
+mention in `sturdy-sys`/`sturdy`. Already-bound items that only *looked* missing by file name
+(`TimeScale`, `TextureStreamer`, `WindowEffects`, `WindowEvent`/`EcsEvents` via events subscription)
+are excluded. Still unbound:
+
+- [ ] `HotReloadableModule` / `HotReloadWatcher` — hot-reloadable game-logic modules (the C++
+      `GameLogic` from a shared library; needs a Rust-side story for reloading a `cdylib`).
+- [ ] `ImageDecode` (`decode_image`, `DecodeOptions`, `DecodedImage`, PNG HDR metadata) —
+      CPU-side image decoding independent of `assets`.
+- [ ] `TextureCompression` (`compress_bc1/3/4/5/7` and `_mip_chain`, `choose_bc_format`,
+      `compress_gdeflate_sibling`) — offline texture compression.
+- [ ] `TextureMipChain` (`generate_rgba8_mip_chain`, `generate_rgba16f_mip_chain`).
+- [ ] `EcsReflection` bridge (`ensure_reflected`, `read_component_field`,
+      `write_component_field`) — named-field access to ECS components from Rust.
+- [ ] `EcsUi` input-state mutators (`set_down`, `add_scroll_delta`, `apply_key`, ...) — only
+      matters for synthesizing UI input (tests, remote/replay input).
+- [ ] `WindowGeometry`/`WindowNative` (`native_window_handle_from_sdl`) — raw native handle, needed
+      for embedding third-party renderers/overlays.
